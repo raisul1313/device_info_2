@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:device_info_2/device_info_provider.dart';
 import 'package:device_info_2/device_info_model.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 
 void main() {
   runApp(const MyApp());
@@ -34,6 +36,8 @@ class _DeviceInformationState extends State<DeviceInformation> {
   late String deviceID;
   late String encoded;
   late String decoded;
+  late String refID;
+  late String dateTimeValue;
   final String apiVersion = "1.2.2";
   final String appVersion = "1.12";
   final String mobileNo = "NF";
@@ -45,9 +49,13 @@ class _DeviceInformationState extends State<DeviceInformation> {
     deviceID = '';
     encoded = '';
     decoded = '';
+    refID = '';
+    dateTimeValue = '';
     envInf = EnvInf();
     deviceInfoModel = DeviceInfoModel();
     init();
+    randomIDGenerator();
+    dateTime();
     super.initState();
   }
 
@@ -78,6 +86,44 @@ class _DeviceInformationState extends State<DeviceInformation> {
     });
   }
 
+  randomIDGenerator(){
+    var uuid = Uuid();
+    String input = uuid.v1().toUpperCase();
+    refID = input.replaceAll('-', '');
+    int len = refID.length;
+    String v = '085810BA117E4B46A058153D9D03CB0D';
+    int len2 = v.length;
+    print(len2);
+    print(refID);
+    print(len);
+
+
+  }
+
+
+  dateTime(){
+    var dateTime = DateTime.now();
+    var val      = DateFormat("yyyy-MM-dd'T'hh:mm:ss").format(dateTime);
+    var offset   = dateTime.timeZoneOffset;
+    var hours    = offset.inHours > 0 ? offset.inHours : 1; // For fixing divide by 0
+
+    if (!offset.isNegative) {
+      val = val +
+          "+" +
+          offset.inHours.toString().padLeft(2, '0') +
+          ":" +
+          (offset.inMinutes % (hours * 60)).toString().padLeft(2, '0');
+    } else {
+      val = val +
+          "-" +
+          (-offset.inHours).toString().padLeft(2, '0') +
+          ":" +
+          (offset.inMinutes % (hours * 60)).toString().padLeft(2, '0');
+    }
+    dateTimeValue = val;
+    print(val);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,13 +131,18 @@ class _DeviceInformationState extends State<DeviceInformation> {
       body: Center(
         child: Container(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               Text('Encrypt: $encoded'),
               SizedBox(
                 height: 12,
               ),
               Text('Decrypt: $decoded'),
+              SizedBox(
+                height: 12,
+              ),
+              Text('Ref ID: $refID', style: TextStyle(fontSize: 17),),
+              Text('Date Time: $dateTimeValue', style: TextStyle(fontSize: 17),),
             ],
           ),
         ),
