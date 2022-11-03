@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:device_info_2/device_info_provider.dart';
 import 'package:device_info_2/device_info_model.dart';
+import 'package:device_info_2/encryption.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+import 'aes_encrypt_decrypt.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +22,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const DeviceInformation(),
+      home: const Encryption(),
     );
   }
 }
@@ -56,6 +58,7 @@ class _DeviceInformationState extends State<DeviceInformation> {
     init();
     randomIDGenerator();
     dateTime();
+    encrypt();
     super.initState();
   }
 
@@ -78,7 +81,7 @@ class _DeviceInformationState extends State<DeviceInformation> {
       deviceInfoModel = DeviceInfoModel(envInf: envInf);
 
       String credentials = json.encode(deviceInfoModel);
-      print(credentials);
+      //print(credentials);
       Codec<String, String> stringToBase64 = utf8.fuse(base64);
       encoded = stringToBase64.encode(credentials);
       decoded = stringToBase64.decode(encoded);
@@ -86,26 +89,24 @@ class _DeviceInformationState extends State<DeviceInformation> {
     });
   }
 
-  randomIDGenerator(){
+  randomIDGenerator() {
     var uuid = Uuid();
     String input = uuid.v1().toUpperCase();
     refID = input.replaceAll('-', '');
     int len = refID.length;
     String v = '085810BA117E4B46A058153D9D03CB0D';
     int len2 = v.length;
-    print(len2);
-    print(refID);
-    print(len);
-
-
+    //print(len2);
+    //print(refID);
+    //print(len);
   }
 
-
-  dateTime(){
+  dateTime() {
     var dateTime = DateTime.now();
-    var val      = DateFormat("yyyy-MM-dd'T'hh:mm:ss").format(dateTime);
-    var offset   = dateTime.timeZoneOffset;
-    var hours    = offset.inHours > 0 ? offset.inHours : 1; // For fixing divide by 0
+    var val = DateFormat("yyyy-MM-dd'T'hh:mm:ss").format(dateTime);
+    var offset = dateTime.timeZoneOffset;
+    var hours =
+        offset.inHours > 0 ? offset.inHours : 1; // For fixing divide by 0
 
     if (!offset.isNegative) {
       val = val +
@@ -121,7 +122,17 @@ class _DeviceInformationState extends State<DeviceInformation> {
           (offset.inMinutes % (hours * 60)).toString().padLeft(2, '0');
     }
     dateTimeValue = val;
-    print(val);
+    //print(val);
+  }
+
+  Future<dynamic> encrypt() async {
+
+    String data =
+        await DefaultAssetBundle.of(context).loadString("asset/headers.json");
+
+    final encryptedText = AESEncryptionDecryption.encryptAES(data);
+    final decryptedText = AESEncryptionDecryption.decryptAES(encryptedText);
+    return encryptedText;
   }
 
   @override
@@ -141,8 +152,14 @@ class _DeviceInformationState extends State<DeviceInformation> {
               SizedBox(
                 height: 12,
               ),
-              Text('Ref ID: $refID', style: TextStyle(fontSize: 17),),
-              Text('Date Time: $dateTimeValue', style: TextStyle(fontSize: 17),),
+              Text(
+                'Ref ID: $refID',
+                style: TextStyle(fontSize: 17),
+              ),
+              Text(
+                'Date Time: $dateTimeValue',
+                style: TextStyle(fontSize: 17),
+              ),
             ],
           ),
         ),
